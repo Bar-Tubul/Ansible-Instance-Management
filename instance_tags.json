@@ -1,0 +1,19 @@
+{
+    "mysql-test-aws-01": {
+        "Version": "",
+        "Name": "mysql-test-aws-01",
+        "Restart": "0 6 * * 0",
+        "Managed": "true",
+        "Service": "mysql-server"
+    },
+    "nginx-test-aws-06": {
+        "Name": "nginx-test-aws-06",
+        "Service": "nginx",
+        "Version": "",
+        "Restart": "0 0 * * 6",
+        "Managed": "true"
+    },
+    "Ansible-Controller": {
+        "Name": "Ansible-Controller"
+    }
+}

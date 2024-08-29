@@ -1,0 +1,44 @@
+---
+- name: Manage AWS EC2 Instances
+  hosts: all
+  gather_facts: yes
+  become: true
+  tasks:
+    - name: Load instance tags from JSON file
+      set_fact:
+        instance_tags: "{{ lookup('file', '/etc/ansible/instance_tags.json') | from_json }}"
+    
+    - name: Check if the server is managed
+      when: "'Managed' in instance_tags[inventory_hostname] and instance_tags[inventory_hostname]['Managed'] == 'true'"
+      block:
+        - name: Set hostname
+          hostname:
+            name: "{{ instance_tags[inventory_hostname]['Name'] }}"
+        
+        - name: Ensure service is installed
+          apt:
+            name: "{{ instance_tags[inventory_hostname]['Service'] }}"
+            state: present
+        
+        - name: Install specific version of the service if needed
+          become: yes
+          shell: |
+            CURRENT_VERSION=$(dpkg -s {{ instance_tags[inventory_hostname]['Service'] }} | grep 'Version:' | awk '{print $2}')
+            if [ "{{ instance_tags[inventory_hostname]['Version'] }}" != "" ]; then
+              if [ "$CURRENT_VERSION" != "{{ instance_tags[inventory_hostname]['Version'] }}" ]; then
+                sudo apt-get install -y {{ instance_tags[inventory_hostname]['Service'] }}={{ instance_tags[inventory_hostname]['Version'] }}
+              fi
+            else
+              # Ensure latest version if the version tag is empty
+              sudo apt-get install -y {{ instance_tags[inventory_hostname]['Service'] }}
+            fi
+        
+        - name: Create crontab entry for restart
+          cron:
+            name: "Restart server"
+            minute: "{{ instance_tags[inventory_hostname]['Restart'].split(' ')[0] }}"
+            hour: "{{ instance_tags[inventory_hostname]['Restart'].split(' ')[1] }}"
+            day: "{{ instance_tags[inventory_hostname]['Restart'].split(' ')[2] }}"
+            month: "{{ instance_tags[inventory_hostname]['Restart'].split(' ')[3] }}"
+            weekday: "{{ instance_tags[inventory_hostname]['Restart'].split(' ')[4] }}"
+            job: "/sbin/shutdown -r now"

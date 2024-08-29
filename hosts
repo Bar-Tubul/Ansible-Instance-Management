@@ -1,0 +1,9 @@
+[mysql]
+mysql-test-aws-01 ansible_host=ec2-98-81-135-96.compute-1.amazonaws.com
+
+[nginx]
+nginx-test-aws-06 ansible_host=ec2-54-196-4-167.compute-1.amazonaws.com
+
+[all:vars]
+ansible_user=ubuntu
+ansible_ssh_private_key_file=/home/ubuntu/.ssh/id_rsa
